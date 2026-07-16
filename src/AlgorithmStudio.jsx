@@ -159,20 +159,30 @@ function ArrayCruncher() {
   const [input, setInput] = useState('34, 7, 23, 32, 5, 62, 32');
   const [target, setTarget] = useState('');
   const [results, setResults] = useState(null);
+  const [error, setError] = useState(null);
 
   const handleProcess = () => {
     const rawArray = input.split(',').map(num => parseInt(num.trim(), 10)).filter(n => !isNaN(n));
-    if (rawArray.length === 0) return;
+    if (rawArray.length === 0) {
+      setError('Enter at least one valid number, separated by commas (e.g. 10, 4, 2, 8).');
+      setResults(null);
+      return;
+    }
 
+    setError(null);
     const sortedArray = algorithms.quickSort(rawArray);
     
     let searchResult = null;
     if (target !== '') {
       const targetNum = parseInt(target, 10);
-      const index = algorithms.binarySearch(sortedArray, targetNum);
-      searchResult = index !== -1 
-        ? `Found ${targetNum} at index ${index} (after sorting)`
-        : `${targetNum} not found in the array.`;
+      if (isNaN(targetNum)) {
+        searchResult = 'Enter a valid number to search for.';
+      } else {
+        const index = algorithms.binarySearch(sortedArray, targetNum);
+        searchResult = index !== -1 
+          ? `Found ${targetNum} at index ${index} (after sorting)`
+          : `${targetNum} not found in the array.`;
+      }
     }
 
     setResults({ original: rawArray, sorted: sortedArray, search: searchResult });
@@ -226,6 +236,12 @@ function ArrayCruncher() {
         Run Algorithms
       </button>
 
+      {error && (
+        <div className="bg-rose-50 border border-rose-200 text-rose-700 text-sm font-semibold p-3 rounded-xl">
+          ⚠️ {error}
+        </div>
+      )}
+
       {results && (
         <div className="bg-slate-900 text-green-400 p-5 rounded-2xl font-mono text-sm space-y-3 shadow-inner border border-slate-800">
           <div><span className="text-slate-500">// 1. Quick Sort Output (O(n log n))</span></div>
@@ -251,10 +267,21 @@ function ArrayCruncher() {
 function StringAnalyzer() {
   const [text, setText] = useState('A man, a plan, a canal: Panama');
   const [results, setResults] = useState(null);
+  const [error, setError] = useState(null);
 
   const handleProcess = () => {
-    if (!text) return;
+    if (!text.trim()) {
+      setError('Enter some text to analyze.');
+      setResults(null);
+      return;
+    }
+    if (!/[A-Za-z0-9]/.test(text)) {
+      setError('Enter at least one letter or number — punctuation alone can\u2019t be analyzed.');
+      setResults(null);
+      return;
+    }
 
+    setError(null);
     const isPalin = algorithms.isPalindrome(text);
     const frequent = algorithms.mostFrequentChar(text);
 
@@ -298,6 +325,12 @@ function StringAnalyzer() {
         Analyze String
       </button>
 
+      {error && (
+        <div className="bg-rose-50 border border-rose-200 text-rose-700 text-sm font-semibold p-3 rounded-xl">
+          ⚠️ {error}
+        </div>
+      )}
+
       {results && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className={`p-5 rounded-2xl border-2 transition-all ${results.palindrome ? 'bg-emerald-50 border-emerald-200' : 'bg-rose-50 border-rose-200'}`}>
@@ -327,14 +360,27 @@ function StringAnalyzer() {
 }
 
 // --- Module 3: Dynamic Programming ---
+const FIBONACCI_MAX = 5000; // keeps the recursive/memoized call stack safe in-browser
+
 function DynamicSequence() {
   const [num, setNum] = useState(40);
   const [result, setResult] = useState(null);
+  const [error, setError] = useState(null);
 
   const handleProcess = () => {
     const n = parseInt(num, 10);
-    if (isNaN(n) || n < 0) return;
-    
+    if (isNaN(n) || n < 0) {
+      setError('Enter a whole number that is 0 or greater.');
+      setResult(null);
+      return;
+    }
+    if (n > FIBONACCI_MAX) {
+      setError(`Keep n at or below ${FIBONACCI_MAX.toLocaleString()} — larger values risk a stack overflow in this recursive implementation.`);
+      setResult(null);
+      return;
+    }
+
+    setError(null);
     const start = performance.now();
     const fibValue = algorithms.fibonacci(n);
     const end = performance.now();
@@ -367,7 +413,7 @@ function DynamicSequence() {
 
       <div className="flex flex-col sm:flex-row gap-4 items-end">
         <div className="flex-1 w-full space-y-2">
-          <label className="text-sm font-semibold text-slate-700">Find the Nth Fibonacci number (Try up to 1000+ safely):</label>
+          <label className="text-sm font-semibold text-slate-700">Find the Nth Fibonacci number (0–{FIBONACCI_MAX.toLocaleString()}):</label>
           <input 
             type="number" 
             value={num} onChange={(e) => setNum(e.target.value)}
@@ -379,6 +425,12 @@ function DynamicSequence() {
           Calculate
         </button>
       </div>
+
+      {error && (
+        <div className="bg-rose-50 border border-rose-200 text-rose-700 text-sm font-semibold p-3 rounded-xl">
+          ⚠️ {error}
+        </div>
+      )}
 
       {result && (
         <div className="bg-slate-900 p-6 rounded-2xl border border-slate-800 shadow-inner flex flex-col gap-2 overflow-hidden">
@@ -430,8 +482,13 @@ export default function App() {
               <span className="px-2.5 py-1 bg-slate-800 rounded-md text-xs font-semibold text-slate-400 border border-slate-700">Client-Side Exports</span>
             </div>
           </div>
-          
-         
+
+          <button
+            onClick={handleDownloadAppFile}
+            className="shrink-0 bg-white/10 hover:bg-white/20 text-white font-bold py-2.5 px-5 rounded-xl border border-white/20 transition-all active:scale-95 flex items-center gap-2 backdrop-blur-sm"
+          >
+            📥 Download Source
+          </button>
         </div>
       </header>
 
